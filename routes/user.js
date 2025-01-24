@@ -10,7 +10,6 @@ const secretKey = process.env.JWT_Secret;
 
 router.get("/", authMiddleware, async (req, res) => {
   const userId = req.user.id;
-  console.log(userId);
   try {
     const user = await User.findById(userId);
     if (!user) {
@@ -72,6 +71,30 @@ router.post("/login", async (req, res) => {
     return res
       .status(500)
       .json({ message: "User cannot login", error: error.message });
+  }
+});
+
+router.put("/update", authMiddleware, async (req, res) => {
+  const userId = req.user.id;
+  const { email, username, mobile } = req.body;
+  const isUserExist = await User.findById(userId);
+  if (!isUserExist) {
+    return res.status(400).json({ message: "User does not exist" });
+  }
+  try {
+    if (email) {
+      const isEmailExist = await User.findOne({ email });
+      if (isEmailExist) {
+        return res.status(400).json({ message: "Email already exist" });
+      }
+      isUserExist.email = email;
+    }
+    if (mobile) isUserExist.mobile = mobile;
+    if (username) isUserExist.username = username;
+    await isUserExist.save();
+    return res.status(200).json({ message: "User updated successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 });
 
