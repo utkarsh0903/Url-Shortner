@@ -4,11 +4,13 @@ const bcrypt = require("bcrypt");
 const router = express.Router();
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
+const authMiddleware = require("../middlewares/auth");
 dotenv.config();
 const secretKey = process.env.JWT_Secret;
 
-router.get("/:userId", async (req, res) => {
-  const { userId } = req.params;
+router.get("/", authMiddleware, async (req, res) => {
+const userId = req.user.id;
+console.log(userId);
   try {
     const user = await User.findById(userId);
     if (!user) {
