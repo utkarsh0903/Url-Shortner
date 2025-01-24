@@ -9,8 +9,8 @@ dotenv.config();
 const secretKey = process.env.JWT_Secret;
 
 router.get("/", authMiddleware, async (req, res) => {
-const userId = req.user.id;
-console.log(userId);
+  const userId = req.user.id;
+  console.log(userId);
   try {
     const user = await User.findById(userId);
     if (!user) {
@@ -72,6 +72,21 @@ router.post("/login", async (req, res) => {
     return res
       .status(500)
       .json({ message: "User cannot login", error: error.message });
+  }
+});
+
+router.delete("/delete", authMiddleware, async (req, res) => {
+  const userId = req.user.id;
+  if (!userId) {
+    return res.status(400).json({ message: "Missing credentials" });
+  }
+  try {
+    await User.findByIdAndDelete(userId);
+    return res.status(200).json({
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 });
 
