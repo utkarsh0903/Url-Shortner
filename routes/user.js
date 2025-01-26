@@ -5,6 +5,7 @@ const router = express.Router();
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
 const authMiddleware = require("../middlewares/auth");
+const emailValid = require("../middlewares/emailValid");
 dotenv.config();
 const secretKey = process.env.JWT_Secret;
 
@@ -23,6 +24,13 @@ router.get("/", authMiddleware, async (req, res) => {
 
 router.post("/register", async (req, res) => {
   const { username, email, mobile, password, confirmPassword } = req.body;
+
+  if (!emailValid(email)) {
+    return res
+      .status(400)
+      .json({ message: "Invalid email format, ex: u@g.com" });
+  }
+
   const isUserExist = await User.findOne({ email });
   if (isUserExist) {
     return res.status(400).json({ message: "User already exist" });
@@ -77,12 +85,18 @@ router.post("/login", async (req, res) => {
 router.put("/update", authMiddleware, async (req, res) => {
   const userId = req.user.id;
   const { email, username, mobile } = req.body;
+
   const isUserExist = await User.findById(userId);
   if (!isUserExist) {
     return res.status(400).json({ message: "User does not exist" });
   }
   try {
     if (email) {
+      if (!emailValid(email)) {
+        return res
+          .status(400)
+          .json({ message: "Invalid email format, ex: u@g.com" });
+      }
       const isEmailExist = await User.findOne({ email });
       if (isEmailExist) {
         return res.status(400).json({ message: "Email already exist" });
