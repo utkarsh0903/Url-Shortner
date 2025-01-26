@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/data");
 const bodyParser = require("body-parser");
 const userRoute = require("./routes/user");
+const linkRoute = require("./routes/link");
 const cors = require("cors");
 
 dotenv.config();
@@ -16,6 +17,7 @@ connectDB();
 app.use(cors());
 app.use(bodyParser.json());
 app.use("/api/user", userRoute);
+app.use("/api/link", linkRoute);
 
 app.listen(PORT, () => {
   console.log(`Server runnning on port ${PORT}`);
