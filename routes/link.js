@@ -14,7 +14,8 @@ router.post("/new-link", authMiddleware, async (req, res) => {
   const salt = await bcrypt.genSalt(2);
   const hashedURL = await bcrypt.hash(originalURL, salt);
   const shortURL = hashedURL.replace(/\W/g, "").slice(0, 8);
-  const shortLink = `${req.protocol}://${req.get("host")}/${shortURL}`;
+  const shortLink = `${req.protocol}://${req.get("host")}/api/link/${shortURL}`;
+  console.log(shortLink);
     const newURL = await Link({
       user: userId,
       originalLink: originalURL,
@@ -31,16 +32,16 @@ router.post("/new-link", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/:shortLink", async (req, res) => {
-  const { shortLink } = req.params;
+router.get("/:shortURL", async (req, res) => {
+  const { shortURL } = req.params;
 
   try {
-    const url = await Link.findOne({ shortLink });
+    const url = await Link.findOne({ shortLink: `${req.protocol}://${req.get("host")}/api/link/${shortURL}` });
 
     if (url) {
       return res.status(200).redirect(url.originalLink);
     } else {
-      return res.status(400).json({ error: "Short URL not found" });
+      return res.status(400).json({ error: "Link is not valid" });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
