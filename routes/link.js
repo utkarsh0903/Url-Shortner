@@ -10,14 +10,15 @@ router.post("/new-link", authMiddleware, async (req, res) => {
   if (!originalURL) {
     return res.status(400).json({ message: "Please enter Destination URL" });
   }
+  try {
   const salt = await bcrypt.genSalt(2);
   const hashedURL = await bcrypt.hash(originalURL, salt);
   const shortURL = hashedURL.replace(/\W/g, "").slice(0, 8);
-  try {
+  const shortLink = `${req.protocol}://${req.get("host")}/${shortURL}`;
     const newURL = await Link({
       user: userId,
       originalLink: originalURL,
-      shortLink: shortURL,
+      shortLink: shortLink,
       remarks,
       expiryDate,
     });
