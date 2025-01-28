@@ -1,14 +1,5 @@
 const mongoose = require("mongoose");
 
-const analyticsSchema = new mongoose.Schema(
-  {
-    ipAddress: String,
-    device: String,
-    timestamp: { type: Date, default: Date.now },
-  },
-  { _id: false }
-);
-
 const linkSchema = new mongoose.Schema(
   {
     user: {
@@ -28,8 +19,7 @@ const linkSchema = new mongoose.Schema(
       required: true,
     },
     clicks: { type: Number, default: 0 },
-    expiryDate: Date,
-    analytics: { type: [analyticsSchema], default: [] },
+    expiryDate: Date
   },
   { timestamps: true }
 );
