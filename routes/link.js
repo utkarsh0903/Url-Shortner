@@ -3,6 +3,7 @@ const authMiddleware = require("../middlewares/auth");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const Link = require("../models/link.models");
+const useragent = require("useragent");
 
 router.get("/links", authMiddleware, async (req, res) => {
   const user = req.user.id;
@@ -27,6 +28,18 @@ router.get("/:shortURL", async (req, res) => {
     });
 
     if (url) {
+        url.clicks += 1;
+
+      const deviceIPAddress = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+
+      const agent = useragent.parse(req.headers["user-agent"]);
+      const device = {
+        ipAddress: deviceIPAddress,
+        device: agent.family
+      };
+
+      url.analytics.push(device);
+      await url.save();
       return res.status(200).redirect(url.originalLink);
     } else {
       return res.status(400).json({ error: "Link is not valid" });
@@ -55,6 +68,7 @@ router.post("/new-link", authMiddleware, async (req, res) => {
       shortLink: shortLink,
       remarks,
       expiryDate,
+      clicks: 0,
     });
     await newURL.save();
     return res
