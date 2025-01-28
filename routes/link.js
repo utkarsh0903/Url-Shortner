@@ -4,6 +4,7 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const Link = require("../models/link.models");
 const useragent = require("useragent");
+const Analytic = require("../models/analytics.model");
 
 router.get("/links", authMiddleware, async (req, res) => {
   const user = req.user.id;
@@ -28,17 +29,25 @@ router.get("/:shortURL", async (req, res) => {
     });
 
     if (url) {
-        url.clicks += 1;
+      const isActive = !url.expiryDate || new Date(url.expiryDate) > new Date();
 
-      const deviceIPAddress = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+      if (!isActive) {
+        return res.status(400).json({ error: "This link is inactive" });
+      }
+
+      url.clicks += 1;
+
+      const deviceIPAddress =
+        req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
       const agent = useragent.parse(req.headers["user-agent"]);
-      const device = {
-        ipAddress: deviceIPAddress,
-        device: agent.family
-      };
 
-      url.analytics.push(device);
+      await Analytic.create({
+        linkId: url._id,
+        ipAddress: deviceIPAddress,
+        device: agent.family,
+      });
+
       await url.save();
       return res.status(200).redirect(url.originalLink);
     } else {
