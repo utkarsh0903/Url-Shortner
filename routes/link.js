@@ -28,14 +28,23 @@ router.get("/:shortURL", async (req, res) => {
     });
 
     if (url) {
-        url.clicks += 1;
+      const isActive = !url.expiryDate || new Date(url.expiryDate) > new Date();
 
-      const deviceIPAddress = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+      if (!isActive) {
+        return res
+          .status(400)
+          .json({ error: "This link is inactive" });
+      }
+
+      url.clicks += 1;
+
+      const deviceIPAddress =
+        req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
       const agent = useragent.parse(req.headers["user-agent"]);
       const device = {
         ipAddress: deviceIPAddress,
-        device: agent.family
+        device: agent.family,
       };
 
       url.analytics.push(device);
