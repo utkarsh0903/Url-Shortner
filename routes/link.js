@@ -4,14 +4,15 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const Link = require("../models/link.models");
 
-router.get("/", authMiddleware, async (req, res) => {
+router.get("/links", authMiddleware, async (req, res) => {
   const user = req.user.id;
-  const { offset, limit } = req.querry;
+  const { offset, limit } = req.query;
   try {
     const userLinks = await Link.find({ user })
       .skip(offset || 0)
       .limit(limit || 10);
-    return res.status(200).json({ userLinks });
+    const totalLinks = await Link.countDocuments({ user: user });
+    return res.status(200).json({ userLinks, totalLinks });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
