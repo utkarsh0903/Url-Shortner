@@ -7,7 +7,7 @@ const analyticsSchema = new mongoose.Schema({
     required: true,
   },
   ipAddress: String,
-  device: String,
+  device: String
 }, { timestamps: true });
 
 const Analytic = mongoose.model("Analytic", analyticsSchema);
