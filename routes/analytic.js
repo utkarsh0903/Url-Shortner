@@ -7,7 +7,6 @@ const Analytic = require("../models/analytics.model");
 router.get("/analytics", authMiddleware, async (req, res) => {
   const user = req.user.id;
   const { offset, limit, isDatesSorted } = req.query;
-  console.log(isDatesSorted);
   try {
     const links = await Link.find({ user }).select(
       "_id originalLink shortLink"
