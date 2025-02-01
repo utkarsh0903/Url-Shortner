@@ -8,7 +8,7 @@ const Analytic = require("../models/analytics.model");
 
 router.get("/links", authMiddleware, async (req, res) => {
   const user = req.user.id;
-  const { offset, limit, remarks } = req.query;
+  const { offset, limit, remarks, isDatesSorted } = req.query;
   try {
     const query = { user };
 
@@ -16,9 +16,13 @@ router.get("/links", authMiddleware, async (req, res) => {
       query.remarks = { $regex: remarks, $options: "i" };
     }
 
+    const sortedLinks = { createdAt: isDatesSorted === "true" ? 1 : -1 }; 
+
     const userLinks = await Link.find(query)
+      .sort(sortedLinks)
       .skip(Number(offset) || 0)
       .limit(Number(limit) || 10);
+
     const totalLinks = await Link.countDocuments(query);
     return res.status(200).json({ userLinks, totalLinks });
   } catch (error) {
@@ -95,7 +99,8 @@ router.post("/new-link", authMiddleware, async (req, res) => {
 });
 
 router.put("/update-link", authMiddleware, async (req, res) => {
-  const { originalLink, linkId } = req.body;
+  const { originalLink, linkId, remarks, expiryDate } = req.body;
+  console.log(originalLink, remarks, expiryDate);
 
   const isLinkExist = await Link.findById(linkId);
   if (!isLinkExist) {
@@ -103,7 +108,10 @@ router.put("/update-link", authMiddleware, async (req, res) => {
   }
   try {
     isLinkExist.originalLink = originalLink;
+    isLinkExist.remarks = remarks;
+    isLinkExist.expiryDate = expiryDate;
     await isLinkExist.save();
+    console.log(isLinkExist);
     return res.status(200).json({ message: "Link updated successfully" });
   } catch (error) {
     return res.status(500).json({ message: error.message });
