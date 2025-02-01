@@ -8,12 +8,18 @@ const Analytic = require("../models/analytics.model");
 
 router.get("/links", authMiddleware, async (req, res) => {
   const user = req.user.id;
-  const { offset, limit } = req.query;
+  const { offset, limit, remarks } = req.query;
   try {
-    const userLinks = await Link.find({ user })
-      .skip(offset || 0)
-      .limit(limit || 10);
-    const totalLinks = await Link.countDocuments({ user: user });
+    const query = { user };
+
+    if (remarks) {
+      query.remarks = { $regex: remarks, $options: "i" };
+    }
+
+    const userLinks = await Link.find(query)
+      .skip(Number(offset) || 0)
+      .limit(Number(limit) || 10);
+    const totalLinks = await Link.countDocuments(query);
     return res.status(200).json({ userLinks, totalLinks });
   } catch (error) {
     res.status(500).json({ message: error.message });
