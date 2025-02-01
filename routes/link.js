@@ -8,7 +8,7 @@ const Analytic = require("../models/analytics.model");
 
 router.get("/links", authMiddleware, async (req, res) => {
   const user = req.user.id;
-  const { offset, limit, remarks, isDatesSorted } = req.query;
+  const { offset, limit, remarks, isDatesSorted, isStatus } = req.query;
   try {
     const query = { user };
 
@@ -16,10 +16,16 @@ router.get("/links", authMiddleware, async (req, res) => {
       query.remarks = { $regex: remarks, $options: "i" };
     }
 
-    const sortedLinks = { createdAt: isDatesSorted === "true" ? 1 : -1 }; 
+    if (isStatus) {
+        if (isStatus === 'active') {
+          query.expiryDate = { $gt: new Date() };
+        } else if (isStatus === 'inactive') {
+          query.expiryDate = { $lte: new Date() };
+        }
+      }
 
     const userLinks = await Link.find(query)
-      .sort(sortedLinks)
+      .sort({ createdAt: isDatesSorted === "true" ? 1 : -1 })
       .skip(Number(offset) || 0)
       .limit(Number(limit) || 10);
 
