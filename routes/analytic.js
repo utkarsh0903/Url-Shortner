@@ -6,7 +6,8 @@ const Analytic = require("../models/analytics.model");
 
 router.get("/analytics", authMiddleware, async (req, res) => {
   const user = req.user.id;
-  const { offset, limit } = req.query;
+  const { offset, limit, isDatesSorted } = req.query;
+  console.log(isDatesSorted);
   try {
     const links = await Link.find({ user }).select(
       "_id originalLink shortLink"
@@ -15,6 +16,7 @@ router.get("/analytics", authMiddleware, async (req, res) => {
     const userlinkIds = links.map((link) => link._id);
 
     const analyticsData = await Analytic.find({ linkId: { $in: userlinkIds } })
+      .sort({ createdAt: isDatesSorted === "true" ? 1 : -1 })
       .skip(Number(offset))
       .limit(Number(limit))
       .populate("linkId", "originalLink shortLink");
@@ -33,8 +35,11 @@ router.get("/clicks", authMiddleware, async (req, res) => {
   const user = req.user.id;
   try {
     const links = await Link.find({ user });
-    
-    const totalClicksCount = links.reduce((acc, link) => acc + (link.clicks || 0), 0);
+
+    const totalClicksCount = links.reduce(
+      (acc, link) => acc + (link.clicks || 0),
+      0
+    );
 
     const userlinkIds = links.map((link) => link._id);
 
@@ -44,11 +49,11 @@ router.get("/clicks", authMiddleware, async (req, res) => {
     const deviceClicks = {};
 
     analyticsData.forEach((info) => {
-        const date = new Date(info.createdAt).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "2-digit"
-        });
+      const date = new Date(info.createdAt).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
+      });
 
       datewiseClicks[date] = (datewiseClicks[date] || 0) + 1;
 
@@ -61,7 +66,6 @@ router.get("/clicks", authMiddleware, async (req, res) => {
       datewiseClicks,
       deviceClicks,
     });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
